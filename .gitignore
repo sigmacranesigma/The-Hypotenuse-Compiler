@@ -5,6 +5,12 @@
 !*/
 !*.*
 
+# Do not ignore C source and header files
+!**/*.c
+!**/*.h
+!**/*.hpp
+!Makefile
+
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml
