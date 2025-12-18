@@ -6,7 +6,6 @@ import sys
 Tokens = [
     ('IF', re.compile(r'\bif\b')),
     ('ELSE', re.compile(r'\belse\b')),
-    ('ELIF', re.compile(r'\belif\b')),
     ('WHILE', re.compile(r'\bwhile\b')),
     ('FOR', re.compile(r'\bfor\b')),
     ('RETURN', re.compile(r'\breturn\b')),
