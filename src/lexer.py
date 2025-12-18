@@ -27,9 +27,9 @@ Tokens = [
 
 #under construction, not finished yet, and will not work properly
 #function to get token list goes here
-def get_tokens(argv[1]):
+def get_tokens(argv):
     # here turns the input into a list then cuts it into smaller parts
-    var = argv
+    var = argv[1]
     while var:
         for token in Tokens:
             match = token[1].match(var)
