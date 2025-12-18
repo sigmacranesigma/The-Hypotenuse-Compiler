@@ -35,13 +35,9 @@ Tokens = [
 
 #under construction, not finished yet, and will not work properly
 #function to get token list goes here
-def get_tokens(sys.argv):
+def get_tokens(argv):
     # here turns the input into a list then cuts it into smaller parts
-    if sys.argv < 2:
-        print("Too many Arguments!")
-        exit()
-    else:
-        var = sys.argv
+    var = argv
     while var:
         for token in Tokens:
             match = token[1].match(var)
