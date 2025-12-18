@@ -4,17 +4,12 @@ import sys
 #order matters, there might be errors if certain elements are not in the right order
 
 Tokens = [
-    ('PRINT', re.compile(r'\bprint\b')),
     ('IF', re.compile(r'\bif\b')),
     ('ELSE', re.compile(r'\belse\b')),
     ('ELIF', re.compile(r'\belif\b')),
     ('WHILE', re.compile(r'\bwhile\b')),
     ('FOR', re.compile(r'\bfor\b')),
     ('RETURN', re.compile(r'\breturn\b')),
-
-    ('FLOAT', re.compile(r'\d+\.\d+')),
-    ('INTEGER', re.compile(r'\d+')),
-    ('STRING', re.compile(r'"(.*?)"')),
 
     ('PLUS', re.compile(r'\+')),
     ('MINUS', re.compile(r'-')),
