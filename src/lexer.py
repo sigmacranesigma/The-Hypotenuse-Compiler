@@ -11,8 +11,6 @@ Tokens = [
     ('WHILE', re.compile(r'\bwhile\b')),
     ('FOR', re.compile(r'\bfor\b')),
     ('RETURN', re.compile(r'\breturn\b')),
-    ('FUNCTION', re.compile(r'\bfunction\b')),
-    ('VAR', re.compile(r'\bvar\b')),
 
     ('FLOAT', re.compile(r'\d+\.\d+')),
     ('INTEGER', re.compile(r'\d+')),
