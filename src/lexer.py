@@ -1,4 +1,5 @@
 import re    #not in use yet, will be used later on
+import sys
 # whoever comments unnecessarily will be murdered
 #order matters, there might be errors if certain elements are not in the right order
 
@@ -34,10 +35,14 @@ Tokens = [
 
 #under construction, not finished yet, and will not work properly
 #function to get token list goes here
-def get_tokens():
-    var = input() #input for source code
+def get_tokens(sys.argv):
     # here turns the input into a list then cuts it into smaller parts
-    while True:
+    if sys.argv < 2:
+        print("Too many Arguments!")
+        exit()
+    else:
+        var = sys.argv
+    while var:
         for token in Tokens:
             match = token[1].match(var)
             if match:
