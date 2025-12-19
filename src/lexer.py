@@ -1,15 +1,30 @@
 import re    #not in use yet, will be used later on
 import sys
-# whoever comments unnecessarily will be murdered
+# hey my comment was good! dont edit this one again!
 #order matters, there might be errors if certain elements are not in the right order
 
 Tokens = [
+
+
+    #KEYWORDS
     ('IF', re.compile(r'\bif\b')),
     ('ELSE', re.compile(r'\belse\b')),
     ('WHILE', re.compile(r'\bwhile\b')),
     ('FOR', re.compile(r'\bfor\b')),
     ('RETURN', re.compile(r'\breturn\b')),
+    ('INT', re.compile(r'\bint\b')),
+    ('CHAR', re.compile(r'\bchar\b')),
+    ('VOID', re.compile(r'\bvoid\b')),
+    ('FLOAT', re.compile(r'\bfloat\b')),
+    ('BOOLEAN', re.compile(r'\b_Bool\b'))
 
+    #DATA TYPES
+    ('STRING', re.compile(r'"[^"]*"')),
+    ('DOUBLE', re.compile(r'\b\d+\.\d+\b')),
+    ('LONG', re.compile(r'\b\d+\b')),
+
+    
+    #OPERATORS AND DELIMITERS AND SYMBOLS
     ('PLUS', re.compile(r'\+')),
     ('MINUS', re.compile(r'-')),
     ('MULTIPLY', re.compile(r'\*')),
@@ -20,8 +35,26 @@ Tokens = [
     ('SEMICOLON', re.compile(r';')),
     ('COMMA', re.compile(r',')),
     ('COLON', re.compile(r':')),
+    ('LESSTHAN', re.compile(r'<')),
+    ('GREATERTHAN', re.compile(r'>')),
+    ('LESSTHANOREQUAL', re.compile(r'<=')),
+    ('GREATERTHANOREQUAL', re.compile(r'>=')),
+    ('NOT', re.compile(r'!')),
+    ('AND', re.compile(r'&&')),
+    ('OR', re.compile(r'\|\|')),
+    ('INCREMENT', re.compile(r'\+\+')),
+    ('DECREMENT', re.compile(r'--')),
+    ('DOT', re.compile(r'\.')),
+    ('ARROW', re.compile(r'->')),
+    ('LBRACKET', re.compile(r'\[')),
+    ('RBRACKET', re.compile(r'\]')),
+    ('LBRACE', re.compile(r'\{')),
+    ('RBRACE', re.compile(r'\}')),
 
+    #IDENTIFIERS
     ('IDENTIFIER', re.compile(r'[A-Za-z_][A-Za-z0-9_]*')),
+
+    #OTHERS
     ('WHITESPACE', re.compile(r'\s+'))
 ]
 
