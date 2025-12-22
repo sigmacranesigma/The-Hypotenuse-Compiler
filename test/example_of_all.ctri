@@ -1,5 +1,5 @@
 // C triangle syntax example file demonstrating ALL features
-using plstd // new library imports — high-level standard utilities (project-specific)
+using <plstd> // new library imports — high-level standard utilities (project-specific)
 #include <stdio.h> // C standard IO for printf
 
 // struct with constructors and member function
