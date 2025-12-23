@@ -92,8 +92,7 @@ class ArrayAccess(Node):
 # parser
 class Parser:
     def __init__(self, tokens, var=None):
-        if var is None:
-            var = [Token]
+        self.var = var
         self.tokens = tokens
         self.i = 0
 
@@ -516,10 +515,6 @@ def main(tokens):
     p = Parser(tokens)
     ast = p.parse_program()
     print(pretty(ast))
-
-if __name__ == "__main__":
-    main()
-
 
 
 
