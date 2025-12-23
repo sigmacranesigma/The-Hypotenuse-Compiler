@@ -1,6 +1,6 @@
-from lexer import Tokens, get_tokens
 import sys
 import parser as parse
+from lexer import get_tokens
 
 
 def main():
