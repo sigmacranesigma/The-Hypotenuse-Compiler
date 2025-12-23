@@ -8,9 +8,10 @@ using <plstd> // new library imports — high-level standard utilities (project-
 #include <stdio.h> // C standard IO for printf
 
 // struct with constructors and member function
-struct Example {
-    int value; // integer member storing the example value
-
+struct Example(value) {
+    int self.value = value; // integer member storing the example value
+    
+    
     // display: prints the provided value (intended as member or param)
     void display(value) {
         printf("Value: %d\n", value);
