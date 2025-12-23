@@ -100,7 +100,7 @@ def get_tokens(argv):
         else:
             print(f'Unknown token: {var[0]}')
             var = var[1:]
-
+    return var
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         exit()
