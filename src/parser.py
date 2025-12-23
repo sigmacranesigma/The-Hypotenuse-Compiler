@@ -91,7 +91,7 @@ class ArrayAccess(Node):
 
 # parser
 class Parser:
-    def __init__(self, tokens: List[Token]):
+    def __init__(self, tokens):
         self.tokens = tokens
         self.i = 0
 
@@ -510,13 +510,14 @@ def pretty(node: Node, indent: int = 0) -> str:
     return pad + f"UnknownNode:{node}\n"
 
 # example use
-def main(tokens):
-    p = Parser(tokens)
+def main(tokens, Tokenlist):
+    p = Parser(tokens, Tokenlist)
     ast = p.parse_program()
     print(pretty(ast))
 
 if __name__ == "__main__":
     main()
+
 
 
 
