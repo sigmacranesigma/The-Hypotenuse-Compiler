@@ -1,4 +1,9 @@
 // C triangle syntax example file demonstrating ALL features
+/*
+  HIIIII
+*/
+
+
 using <plstd> // new library imports — high-level standard utilities (project-specific)
 #include <stdio.h> // C standard IO for printf
 
