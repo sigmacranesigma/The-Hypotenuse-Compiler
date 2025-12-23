@@ -1,5 +1,5 @@
 import re
-import sys
+
 #order matters, there might be errors if certain elements are not in the right order
 
 Tokens = [
@@ -75,9 +75,9 @@ Tokens = [
     ('DOT', re.compile(r'\.')),
     ('ARROW', re.compile(r'->')),
     ('LBRACKET', re.compile(r'\[')),
-    ('RBRACKET', re.compile(r'\]')),
+    ('RBRACKET', re.compile(r']')),
     ('LBRACE', re.compile(r'\{')),
-    ('RBRACE', re.compile(r'\}')),
+    ('RBRACE', re.compile(r'}')),
 
     #IDENTIFIERS
     ('IDENTIFIER', re.compile(r'[A-Za-z_][A-Za-z0-9_]*')),
@@ -103,13 +103,3 @@ def get_tokens(argv):
             tokens.append(('UNKNOWN', var[0]))
             var = var[1:]
     return tokens
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        exit()
-    else:
-        with open(sys.argv, 'r') as file:
-                content = file.read()
-        token_list = get_tokens(content)
-        for t in token_list:
-            print(f"Token: {t[0]}, Lexeme {t[1]}")
-            
