@@ -23,6 +23,7 @@
 
 *.json
 
+.vscode/
 
 # Generated files
 .idea/**/contentModel.xml
