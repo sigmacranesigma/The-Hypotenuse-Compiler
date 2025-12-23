@@ -3,7 +3,9 @@ import sys
 #order matters, there might be errors if certain elements are not in the right order
 
 Tokens = [
-
+    # COMMENTS
+    ('COMMENT_MULTI', re.compiler(r'/\*.*?\*/', re.DOTALL)),
+    ('COMMENT_LINE', re.compiler(r'//[^\n]*')),
 
     #KEYWORDS
     ('IF', re.compile(r'\bif\b')),
@@ -11,10 +13,37 @@ Tokens = [
     ('WHILE', re.compile(r'\bwhile\b')),
     ('FOR', re.compile(r'\bfor\b')),
     ('RETURN', re.compile(r'\breturn\b')),
+    ('BREAK', re.compile(r'\bbreak\b')),
+    ('CONTINUE', re.compile(r'\bcontinue\b')),
+    ('SWITCH', re.compile(r'\bswitch\b')),
+    ('CASE', re.compile(r'\bcase\b')),
+    ('DEFAULT', re.compile(r'\bdefault\b')),
+    ('DO', re.compile(r'\bdo\b')),
+    ('GOTO', re.compile(r'\bgoto\b')),
+
+    
     ('INT', re.compile(r'\bint\b')),
     ('CHAR', re.compile(r'\bchar\b')),
     ('VOID', re.compile(r'\bvoid\b')),
     ('FLOAT', re.compile(r'\bfloat\b')),
+    ('DOUBLE', re.compile(r'\bdouble\b')),
+    ('SHORT', re.compile(r'\bshort\b')),
+    ('LONG', re.compile(r'\blong\b')),
+    ('SIGNED', re.compile(r'\bsigned\b')),
+    ('UNSIGNED', re.compile(r'\bunsigned\b')),
+    ('STRUCT', re.compile(r'\bstruct\b')),
+    ('UNION', re.compile(r'\bunion\b')),
+    ('ENUM', re.compile(r'\benum\b')),
+    ('TYPEDEF', re.compile(r'\btypedef\b')),
+    ('CONST', re.compile(r'\bconst\b')),
+    ('VOLATILE', re.compile(r'\bvolatile\b')),
+    ('STATIC', re.compile(r'\bstatic\b')),
+    ('EXTERN', re.compile(r'\bextern\b')),
+    ('INLINE', re.compile(r'\binline\b')),
+    ('REGISTER', re.compile(r'\bregister\b')),
+    ('AUTO', re.compile(r'\bauto\b')),
+    ('SIZEOF', re.compile(r'\bsizeof\b')),
+    ('RESTRICT', re.compile(r'\brestrict\b')),    
     ('BOOLEAN', re.compile(r'\b_Bool\b')),
 
     #DATA TYPES
