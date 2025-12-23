@@ -7,7 +7,8 @@ def main():
   with open(sys.argv, "r") as file:
     content = file.read()
   tokens = get_tokens(content[0])
-  parse.main(tokens)
+  parse.main(tokens, Tokens)
 
 main()
+
 
