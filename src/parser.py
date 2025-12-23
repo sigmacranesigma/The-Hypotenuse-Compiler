@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Optional, Any, Tuple
+from lexer import Token
 
 # ast data classes
 @dataclass
@@ -516,5 +517,6 @@ def main(tokens):
 
 if __name__ == "__main__":
     main()
+
 
 
