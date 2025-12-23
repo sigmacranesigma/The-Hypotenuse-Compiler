@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Optional, Any, Tuple
-from lexer import Token as Token
+from lexer import Tokens as Token
 
 # ast data classes
 @dataclass
@@ -91,7 +91,9 @@ class ArrayAccess(Node):
 
 # parser
 class Parser:
-    def __init__(self, tokens[Token]):
+    def __init__(self, tokens, var=None):
+        if var is None:
+            var = [Token]
         self.tokens = tokens
         self.i = 0
 

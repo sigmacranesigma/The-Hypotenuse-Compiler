@@ -4,7 +4,7 @@ import parser as parse
 
 
 def main():
-  with open(sys.argv, "r") as file:
+  with open(sys.argv[1], "r") as file:
     content = file.read()
   tokens = get_tokens(content[0])
   parse.main(tokens)

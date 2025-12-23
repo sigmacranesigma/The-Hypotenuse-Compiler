@@ -87,7 +87,7 @@ Tokens = [
 ]
 
 def get_tokens(argv):
-    var = argv[1]
+    var = argv[0]
     tokens = []
     
     while var:
@@ -96,7 +96,7 @@ def get_tokens(argv):
             if match:
                 lexeme = match.group(0)
                 if token[0] != 'WHITESPACE':
-                    tokens.append((Token[0], lexeme))
+                    tokens.append((token[0], lexeme))
                 var = var[len(lexeme):]
                 break
         else:
