@@ -26,3 +26,22 @@ class Parser:
             )
         return self.advance()
 
+# AST nodes
+class Node: pass
+
+class Program(Node):
+    def __init__(self, decls):
+        self.decls = decls
+
+class Parser(Parser):
+
+    def parse_program(self):
+        decls = []
+        while self.peek()[0] != 'EOF':
+            decls.append(self.parse_external())
+        return Program(decls)
+
+    def parse_external(self):
+        # placeholder until we implement the declaratiosn
+        raise NotImplementedError("parse_external not implemented yet")
+
