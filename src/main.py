@@ -17,13 +17,13 @@ def main():
   except OSError as e:
     print(f"Error reading file: {e}")
     sys.exit(1)
+  tokens = get_tokens(content)
   except SyntaxError as e:
     print(f"Syntax error: {e}")
     sys.exit(1)
   except Exception as e:
     print(f"Lexing error: {e}")
     sys.exit(1)
-  tokens = get_tokens(content)
   #Debug: 
   #Add this to verify EOF works: print(tokens[-1])
   tokens.append(('EOF', 'EOF'))
