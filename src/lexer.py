@@ -83,7 +83,8 @@ Tokens = [
     ('IDENTIFIER', re.compile(r'[A-Za-z_][A-Za-z0-9_]*')),
 
     #OTHERS
-    ('WHITESPACE', re.compile(r'\s+'))
+    ('WHITESPACE', re.compile(r'\s+')),
+    ('UNKNOWN', re.compile(r'.'))
 ]
 
 def get_tokens(argv):

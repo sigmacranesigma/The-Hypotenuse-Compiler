@@ -6,7 +6,10 @@ from lexer import get_tokens
 def main():
   with open(sys.argv[1], "r") as file:
     content = file.read()
-  tokens = get_tokens(content[0])
+  tokens = []
+  for i in content:
+    tokens.append(get_tokens(i))
+  print(tokens)
   parse.main(tokens)
 
 main()
