@@ -14,7 +14,10 @@ def main():
   except FileNotFoundError:
     print(f"Error: file not found {sys.argv[1]}")
     sys.exit(1)
+  except OSError as e:
+      print(f"Error reading file: {e}")
   tokens = get_tokens(content)
+  #Debug: 
   #Add this to verify EOF works: print(tokens[-1])
   tokens.append(('EOF', 'EOF'))
   print(tokens)
