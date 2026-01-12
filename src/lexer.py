@@ -4,12 +4,16 @@ from typing import List, Tuple
 # Tokens are emitted as: (TYPE, LEXEME, POSITION)
 
 TOKENS = [
-    # Comments + whitespace
+    # --------------------------------------------------
+    # Comments + whitespace (skipped)
+    # --------------------------------------------------
     ("COMMENT_MULTI", re.compile(r"/\*.*?\*/", re.DOTALL)),
     ("COMMENT_LINE", re.compile(r"//[^\n]*")),
     ("WHITESPACE", re.compile(r"\s+")),
 
+    # --------------------------------------------------
     # Keywords
+    # --------------------------------------------------
     ("IF", re.compile(r"\bif\b")),
     ("ELSE", re.compile(r"\belse\b")),
     ("WHILE", re.compile(r"\bwhile\b")),
@@ -32,13 +36,19 @@ TOKENS = [
     ("UNION", re.compile(r"\bunion\b")),
     ("BOOLEAN", re.compile(r"\b_Bool\b")),
 
+    # --------------------------------------------------
     # Literals
+    # --------------------------------------------------
     ("STRING_LITERAL", re.compile(r'"(\\.|[^"\\])*"')),
     ("CHAR_LITERAL", re.compile(r"'(\\.|[^'\\])'")),
+    ("HEX_LITERAL", re.compile(r"0x[0-9A-Fa-f]+")),
+    ("BIN_LITERAL", re.compile(r"0b[01]+")),
     ("FLOAT_LITERAL", re.compile(r"\d+\.\d+")),
     ("INT_LITERAL", re.compile(r"\d+")),
 
-    # Operators 
+    # --------------------------------------------------
+    # Multi-character operators (must come first)
+    # --------------------------------------------------
     ("INCREMENT", re.compile(r"\+\+")),
     ("DECREMENT", re.compile(r"--")),
     ("EQ", re.compile(r"==")),
@@ -50,8 +60,12 @@ TOKENS = [
     ("AND", re.compile(r"&&")),
     ("OR", re.compile(r"\|\|")),
 
-    # Single-char operators
+    # --------------------------------------------------
+    # Single-character operators
+    # --------------------------------------------------
     ("ASSIGN", re.compile(r"=")),
+    ("LT", re.compile(r"<")),
+    ("GT", re.compile(r">")),
     ("PLUS", re.compile(r"\+")),
     ("MINUS", re.compile(r"-")),
     ("MULTIPLY", re.compile(r"\*")),
@@ -64,7 +78,9 @@ TOKENS = [
     ("TILDE", re.compile(r"~")),
     ("QUESTION", re.compile(r"\?")),
 
+    # --------------------------------------------------
     # Delimiters
+    # --------------------------------------------------
     ("LPAREN", re.compile(r"\(")),
     ("RPAREN", re.compile(r"\)")),
     ("LBRACE", re.compile(r"\{")),
@@ -76,10 +92,14 @@ TOKENS = [
     ("COLON", re.compile(r":")),
     ("DOT", re.compile(r"\.")),
 
+    # --------------------------------------------------
     # Identifiers
+    # --------------------------------------------------
     ("IDENTIFIER", re.compile(r"[A-Za-z_][A-Za-z0-9_]*")),
 
-    # Fallback
+    # --------------------------------------------------
+    # Fallback (should never be hit in valid code)
+    # --------------------------------------------------
     ("UNKNOWN", re.compile(r".")),
 ]
 
@@ -89,7 +109,7 @@ def get_tokens(text: str) -> List[Tuple[str, str, int]]:
     Convert source code into a list of tokens.
     Each token is (TYPE, LEXEME, POSITION).
     """
-    tokens = []
+    tokens: List[Tuple[str, str, int]] = []
     pos = 0
 
     while pos < len(text):
@@ -102,7 +122,7 @@ def get_tokens(text: str) -> List[Tuple[str, str, int]]:
             start = pos
             pos = match.end()
 
-            # Skip whitespace and comments
+            # Skip whitespace and comments entirely
             if name in ("WHITESPACE", "COMMENT_LINE", "COMMENT_MULTI"):
                 break
 
@@ -111,4 +131,6 @@ def get_tokens(text: str) -> List[Tuple[str, str, int]]:
         else:
             raise RuntimeError(f"Lexer stuck at position {pos}")
 
+    # Explicit EOF token required by the parser
+    tokens.append(("EOF", "", pos))
     return tokens
