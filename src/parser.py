@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 from typing import List, Optional, Any, Tuple
-from lexer import Tokens as Token
 
-# ast data classes
+Token = Tuple[str, str, int]  # (TYPE, LEXEME, POSITION)
+
+# =========================
+# AST NODE DEFINITIONS
+# =========================
+
 @dataclass
 class Node:
     pass
@@ -89,257 +93,205 @@ class ArrayAccess(Node):
     array: Node
     index: Node
 
-# parser
+
+# =========================
+# PARSER IMPLEMENTATION
+# =========================
+
 class Parser:
-    def __init__(self, tokens, var=None):
-        self.var = var
+    """
+    Recursive-descent parser for a C-like language.
+    Uses precedence climbing for expressions.
+    """
+
+    def __init__(self, tokens: List[Token]):
         self.tokens = tokens
-        self.i = 0
+        self.i = 0  # current token index
+
+    # -------------------------
+    # Utility methods
+    # -------------------------
 
     def peek(self) -> Token:
+        """Look at the current token without consuming it."""
         return self.tokens[self.i]
 
     def advance(self) -> Token:
+        """Consume and return the current token."""
         tok = self.tokens[self.i]
         self.i += 1
         return tok
 
-    def expect(self, type_name: str) -> Token:
-        tok = self.peek()
-        if tok[0] == type_name:
-            return self.advance()
-        raise SyntaxError(f"Expected {type_name} at pos {tok[2]}, got {tok[0]} ({tok[1]!r})")
-
-    def accept(self, type_name: str) -> Optional[Token]:
-        tok = self.peek()
-        if tok[0] == type_name:
+    def accept(self, kind: str) -> Optional[Token]:
+        """
+        If the current token matches `kind`, consume it.
+        Otherwise return None.
+        """
+        if self.peek()[0] == kind:
             return self.advance()
         return None
 
-    # top level
+    def expect(self, kind: str) -> Token:
+        """
+        Require the current token to be of `kind`.
+        Throws a syntax error if it isn't.
+        """
+        tok = self.peek()
+        if tok[0] == kind:
+            return self.advance()
+        raise SyntaxError(f"Expected {kind} at {tok[2]}, got {tok[0]}")
+
+    # -------------------------
+    # Top-level grammar
+    # -------------------------
+
     def parse_program(self) -> Program:
+        """
+        program → { external_declaration } EOF
+        """
         decls = []
-        while self.peek()[0] != 'EOF':
+        while self.peek()[0] != "EOF":
             decls.append(self.parse_external())
         return Program(decls)
 
     def parse_external(self) -> Node:
-        t = self.peek()
-        if t[0] in ('INT','CHAR','VOID','FLOAT','DOUBLE','LONG','SHORT','SIGNED','UNSIGNED','STRUCT','UNION','ENUM','BOOLEAN'):
-            typ = self.advance()[1]
-            idtok = self.expect('IDENTIFIER')
-            name = idtok[1]
-            if self.accept('LPAREN'):
-                params = []
-                if not self.accept('RPAREN'):
-                    while True:
-                        ptype_tok = self.peek()
-                        if ptype_tok[0] not in ('INT','CHAR','VOID','FLOAT','DOUBLE','LONG','SHORT','SIGNED','UNSIGNED','STRUCT','UNION','ENUM','BOOLEAN'):
-                            raise SyntaxError(f"Expected type in parameter list at pos {ptype_tok[2]} got {ptype_tok[0]}")
-                        ptype = self.advance()[1]
-                        pname_tok = self.expect('IDENTIFIER')
-                        pname = pname_tok[1]
-                        params.append((ptype, pname))
-                        if self.accept('COMMA'):
-                            continue
-                        self.expect('RPAREN')
-                        break
-                # function body or prototype
-                if self.peek()[0] == 'LBRACE':
-                    body = self.parse_compound()
-                    return Function(ret_type=typ, name=name, params=params, body=body)
-                else:
-                    self.expect('SEMICOLON')
-                    return Declaration(var_type=f"{typ} (func prototype)", name=name, initializer=None)
-            else:
-                # variable declaration
-                init = None
-                if self.accept('ASSIGN'):
-                    init = self.parse_expression()
-                self.expect('SEMICOLON')
-                return Declaration(var_type=typ, name=name, initializer=init)
-        else:
-            raise SyntaxError(f"Unexpected token at top-level: {t}")
+        """
+        Handles:
+          - function definitions
+          - global variable declarations
+        """
+        if self.peek()[0] in (
+            "INT","CHAR","VOID","FLOAT","DOUBLE",
+            "LONG","SHORT","SIGNED","UNSIGNED",
+            "STRUCT","ENUM","UNION","BOOLEAN"
+        ):
+            type_name = self.advance()[1]
+            name = self.expect("IDENTIFIER")[1]
 
-    # statements
+            # Function
+            if self.accept("LPAREN"):
+                params = []
+                if not self.accept("RPAREN"):
+                    while True:
+                        ptype = self.advance()[1]
+                        pname = self.expect("IDENTIFIER")[1]
+                        params.append((ptype, pname))
+                        if not self.accept("COMMA"):
+                            self.expect("RPAREN")
+                            break
+
+                body = self.parse_compound()
+                return Function(type_name, name, params, body)
+
+            # Variable
+            init = None
+            if self.accept("ASSIGN"):
+                init = self.parse_expression()
+            self.expect("SEMICOLON")
+            return Declaration(type_name, name, init)
+
+        raise SyntaxError(f"Unexpected token {self.peek()}")
+
+    # -------------------------
+    # Statements
+    # -------------------------
+
     def parse_statement(self) -> Node:
-        t = self.peek()
-        if t[0] == 'LBRACE':
+        tok = self.peek()[0]
+
+        if tok == "LBRACE":
             return self.parse_compound()
-        if t[0] == 'IF':
+
+        if tok == "IF":
             self.advance()
-            self.expect('LPAREN')
+            self.expect("LPAREN")
             cond = self.parse_expression()
-            self.expect('RPAREN')
+            self.expect("RPAREN")
             then_branch = self.parse_statement()
             else_branch = None
-            if self.accept('ELSE'):
+            if self.accept("ELSE"):
                 else_branch = self.parse_statement()
-            return If(cond=cond, then_branch=then_branch, else_branch=else_branch)
-        if t[0] == 'WHILE':
+            return If(cond, then_branch, else_branch)
+
+        if tok == "WHILE":
             self.advance()
-            self.expect('LPAREN')
+            self.expect("LPAREN")
             cond = self.parse_expression()
-            self.expect('RPAREN')
+            self.expect("RPAREN")
             body = self.parse_statement()
-            return While(cond=cond, body=body)
-        if t[0] == 'FOR':
-            self.advance()
-            self.expect('LPAREN')
-            init = None
-            if self.peek()[0] != 'SEMICOLON':
-                # could be declaration or expression
-                if self.peek()[0] in ('INT','CHAR','VOID','FLOAT','DOUBLE','LONG','SHORT','SIGNED','UNSIGNED','STRUCT','UNION','ENUM','BOOLEAN'):
-                    # local declaration
-                    typ = self.advance()[1]
-                    idtok = self.expect('IDENTIFIER')
-                    name = idtok[1]
-                    init = Declaration(var_type=typ, name=name, initializer=None)
-                    if self.accept('ASSIGN'):
-                        init.initializer = self.parse_expression()
-                else:
-                    init = self.parse_expression()
-            self.expect('SEMICOLON')
-            cond = None
-            if self.peek()[0] != 'SEMICOLON':
-                cond = self.parse_expression()
-            self.expect('SEMICOLON')
-            post = None
-            if self.peek()[0] != 'RPAREN':
-                post = self.parse_expression()
-            self.expect('RPAREN')
-            body = self.parse_statement()
-            return For(init=init, cond=cond, post=post, body=body)
-        if t[0] == 'RETURN':
+            return While(cond, body)
+
+        if tok == "RETURN":
             self.advance()
             expr = None
-            if self.peek()[0] != 'SEMICOLON':
+            if self.peek()[0] != "SEMICOLON":
                 expr = self.parse_expression()
-            self.expect('SEMICOLON')
-            return Return(expr=expr)
-        # local declaration
-        if t[0] in ('INT','CHAR','VOID','FLOAT','DOUBLE','LONG','SHORT','SIGNED','UNSIGNED','STRUCT','UNION','ENUM','BOOLEAN'):
-            typ = self.advance()[1]
-            idtok = self.expect('IDENTIFIER')
-            name = idtok[1]
-            init = None
-            if self.accept('ASSIGN'):
-                init = self.parse_expression()
-            self.expect('SEMICOLON')
-            return Declaration(var_type=typ, name=name, initializer=init)
-        # expression statement
+            self.expect("SEMICOLON")
+            return Return(expr)
+
+        # Expression statement
         expr = None
-        if self.peek()[0] != 'SEMICOLON':
+        if tok != "SEMICOLON":
             expr = self.parse_expression()
-        self.expect('SEMICOLON')
-        return ExprStmt(expr=expr)
+        self.expect("SEMICOLON")
+        return ExprStmt(expr)
 
     def parse_compound(self) -> Compound:
-        self.expect('LBRACE')
+        """ { statement* } """
+        self.expect("LBRACE")
         stmts = []
-        while self.peek()[0] != 'RBRACE':
+        while self.peek()[0] != "RBRACE":
             stmts.append(self.parse_statement())
-        self.expect('RBRACE')
-        return Compound(stmts=stmts)
+        self.expect("RBRACE")
+        return Compound(stmts)
 
-
+    # -------------------------
+    # Expressions (precedence)
+    # -------------------------
 
     def parse_expression(self) -> Node:
         return self.parse_assignment()
 
     def parse_assignment(self) -> Node:
-        node = self.parse_conditional()
-        if self.accept('ASSIGN'):
-            rhs = self.parse_assignment()
-            return Assignment(target=node, value=rhs)
-        return node
-
-    def parse_conditional(self) -> Node:
         node = self.parse_logical_or()
-        if self.accept('QUESTION'):
-            true_expr = self.parse_expression()
-            self.expect('COLON')
-            false_expr = self.parse_conditional()  # right associative
-            return Binary(op='?:', left=node, right=Binary(op='branch', left=true_expr, right=false_expr))
+        if self.accept("ASSIGN"):
+            return Assignment(node, self.parse_assignment())
         return node
 
     def parse_logical_or(self) -> Node:
         node = self.parse_logical_and()
-        while self.accept('OR'):
-            rhs = self.parse_logical_and()
-            node = Binary(op='||', left=node, right=rhs)
+        while self.accept("OR"):
+            node = Binary("||", node, self.parse_logical_and())
         return node
 
     def parse_logical_and(self) -> Node:
-        node = self.parse_bitwise_or()
-        while self.accept('AND'):
-            rhs = self.parse_bitwise_or()
-            node = Binary(op='&&', left=node, right=rhs)
-        return node
-
-    def parse_bitwise_or(self) -> Node:
-        node = self.parse_bitwise_xor()
-        while self.accept('BITOR'):
-            rhs = self.parse_bitwise_xor()
-            node = Binary(op='|', left=node, right=rhs)
-        return node
-
-    def parse_bitwise_xor(self) -> Node:
-        node = self.parse_bitwise_and()
-        while self.accept('XOR'):
-            rhs = self.parse_bitwise_and()
-            node = Binary(op='^', left=node, right=rhs)
-        return node
-
-    def parse_bitwise_and(self) -> Node:
         node = self.parse_equality()
-        while self.accept('BITAND'):
-            rhs = self.parse_equality()
-            node = Binary(op='&', left=node, right=rhs)
+        while self.accept("AND"):
+            node = Binary("&&", node, self.parse_equality())
         return node
 
     def parse_equality(self) -> Node:
         node = self.parse_relational()
         while True:
-            if self.accept('EQ'):
-                rhs = self.parse_relational()
-                node = Binary(op='==', left=node, right=rhs)
-            elif self.accept('NE'):
-                rhs = self.parse_relational()
-                node = Binary(op='!=', left=node, right=rhs)
+            if self.accept("EQ"):
+                node = Binary("==", node, self.parse_relational())
+            elif self.accept("NE"):
+                node = Binary("!=", node, self.parse_relational())
             else:
                 break
         return node
-
 
     def parse_relational(self) -> Node:
-        node = self.parse_shifts()
-        while True:
-            if self.accept('LT'):
-                rhs = self.parse_shifts()
-                node = Binary(op='<', left=node, right=rhs)
-            elif self.accept('GT'):
-                rhs = self.parse_shifts()
-                node = Binary(op='>', left=node, right=rhs)
-            elif self.accept('LE'):
-                rhs = self.parse_shifts()
-                node = Binary(op='<=', left=node, right=rhs)
-            elif self.accept('GE'):
-                rhs = self.parse_shifts()
-                node = Binary(op='>=', left=node, right=rhs)
-            else:
-                break
-        return node
-
-    def parse_shifts(self) -> Node:
         node = self.parse_additive()
         while True:
-            if self.accept('LSHIFT'):
-                rhs = self.parse_additive()
-                node = Binary(op='<<', left=node, right=rhs)
-            elif self.accept('RSHIFT'):
-                rhs = self.parse_additive()
-                node = Binary(op='>>', left=node, right=rhs)
+            if self.accept("LT"):
+                node = Binary("<", node, self.parse_additive())
+            elif self.accept("GT"):
+                node = Binary(">", node, self.parse_additive())
+            elif self.accept("LE"):
+                node = Binary("<=", node, self.parse_additive())
+            elif self.accept("GE"):
+                node = Binary(">=", node, self.parse_additive())
             else:
                 break
         return node
@@ -347,12 +299,10 @@ class Parser:
     def parse_additive(self) -> Node:
         node = self.parse_multiplicative()
         while True:
-            if self.accept('PLUS'):
-                rhs = self.parse_multiplicative()
-                node = Binary(op='+', left=node, right=rhs)
-            elif self.accept('MINUS'):
-                rhs = self.parse_multiplicative()
-                node = Binary(op='-', left=node, right=rhs)
+            if self.accept("PLUS"):
+                node = Binary("+", node, self.parse_multiplicative())
+            elif self.accept("MINUS"):
+                node = Binary("-", node, self.parse_multiplicative())
             else:
                 break
         return node
@@ -360,162 +310,55 @@ class Parser:
     def parse_multiplicative(self) -> Node:
         node = self.parse_unary()
         while True:
-            if self.accept('MULTIPLY'):
-                rhs = self.parse_unary()
-                node = Binary(op='*', left=node, right=rhs)
-            elif self.accept('DIVIDE'):
-                rhs = self.parse_unary()
-                node = Binary(op='/', left=node, right=rhs)
-            elif self.accept('MODULO'):
-                rhs = self.parse_unary()
-                node = Binary(op='%', left=node, right=rhs)
+            if self.accept("MULTIPLY"):
+                node = Binary("*", node, self.parse_unary())
+            elif self.accept("DIVIDE"):
+                node = Binary("/", node, self.parse_unary())
+            elif self.accept("MODULO"):
+                node = Binary("%", node, self.parse_unary())
             else:
                 break
         return node
 
     def parse_unary(self) -> Node:
-        if self.accept('PLUS'):
-            return Unary(op='+', operand=self.parse_unary(), prefix=True)
-        if self.accept('MINUS'):
-            return Unary(op='-', operand=self.parse_unary(), prefix=True)
-        if self.accept('NOT'):
-            return Unary(op='!', operand=self.parse_unary(), prefix=True)
-        if self.accept('TILDE'):
-            return Unary(op='~', operand=self.parse_unary(), prefix=True)
-        if self.accept('INCREMENT'):
-            return Unary(op='++', operand=self.parse_unary(), prefix=True)
-        if self.accept('DECREMENT'):
-            return Unary(op='--', operand=self.parse_unary(), prefix=True)
+        if self.accept("PLUS"):
+            return Unary("+", self.parse_unary())
+        if self.accept("MINUS"):
+            return Unary("-", self.parse_unary())
+        if self.accept("NOT"):
+            return Unary("!", self.parse_unary())
         return self.parse_postfix()
 
     def parse_postfix(self) -> Node:
         node = self.parse_primary()
         while True:
-            if self.accept('LPAREN'):
+            if self.accept("LPAREN"):
                 args = []
-                if not self.accept('RPAREN'):
+                if not self.accept("RPAREN"):
                     while True:
                         args.append(self.parse_expression())
-                        if self.accept('COMMA'):
-                            continue
-                        self.expect('RPAREN')
-                        break
-                node = Call(callee=node, args=args)
-            elif self.accept('LBRACKET'):
+                        if not self.accept("COMMA"):
+                            self.expect("RPAREN")
+                            break
+                node = Call(node, args)
+            elif self.accept("LBRACKET"):
                 idx = self.parse_expression()
-                self.expect('RBRACKET')
-                node = ArrayAccess(array=node, index=idx)
-            elif self.accept('INCREMENT'):
-                node = Unary(op='++', operand=node, prefix=False)
-            elif self.accept('DECREMENT'):
-                node = Unary(op='--', operand=node, prefix=False)
+                self.expect("RBRACKET")
+                node = ArrayAccess(node, idx)
             else:
                 break
         return node
 
     def parse_primary(self) -> Node:
         tok = self.peek()
-        if tok[0] == 'IDENTIFIER':
+        if tok[0] == "IDENTIFIER":
             self.advance()
-            return Var(name=tok[1])
-        if tok[0] == 'STRING_LITERAL':
+            return Var(tok[1])
+        if tok[0] in ("INT_LITERAL", "FLOAT_LITERAL", "STRING_LITERAL", "CHAR_LITERAL"):
             self.advance()
-            return Literal(value=tok[1])
-        if tok[0] == 'CHAR_LITERAL':
-            self.advance()
-            return Literal(value=tok[1])
-        if tok[0] == 'FLOAT_LITERAL':
-            self.advance()
-            try:
-                val = float(tok[1])
-            except:
-                val = tok[1]
-            return Literal(value=val)
-        if tok[0] == 'HEX_LITERAL':
-            self.advance()
-            return Literal(value=int(tok[1], 16))
-        if tok[0] == 'BIN_LITERAL':
-            self.advance()
-            return Literal(value=int(tok[1], 2))
-        if tok[0] == 'INT_LITERAL':
-            self.advance()
-            return Literal(value=int(tok[1]))
-        if tok[0] == 'LPAREN':
-            self.advance()
-            e = self.parse_expression()
-            self.expect('RPAREN')
-            return e
-        raise SyntaxError(f"Unexpected token in expression at pos {tok[2]}: {tok}")
-
-# pretty printer for ast
-def pretty(node: Node, indent: int = 0) -> str:
-    pad = '  ' * indent
-    if isinstance(node, Program):
-        s = pad + "Program:\n"
-        for d in node.declarations:
-            s += pretty(d, indent+1)
-        return s
-    if isinstance(node, Function):
-        s = pad + f"Function: {node.ret_type} {node.name}({', '.join(t+' '+n for t,n in node.params)})\n"
-        s += pretty(node.body, indent+1)
-        return s
-    if isinstance(node, Declaration):
-        s = pad + f"Declaration: {node.var_type} {node.name}"
-        if node.initializer:
-            s += " =\n" + pretty(node.initializer, indent+1)
-        else:
-            s += "\n"
-        return s
-    if isinstance(node, Compound):
-        s = pad + "Compound:\n"
-        for st in node.stmts:
-            s += pretty(st, indent+1)
-        return s
-    if isinstance(node, If):
-        s = pad + "If:\n"
-        s += pad + "  Cond:\n" + pretty(node.cond, indent+2)
-        s += pad + "  Then:\n" + pretty(node.then_branch, indent+2)
-        if node.else_branch:
-            s += pad + "  Else:\n" + pretty(node.else_branch, indent+2)
-        return s
-    if isinstance(node, While):
-        return pad + "While:\n" + pad + "  Cond:\n" + pretty(node.cond, indent+2) + pad + "  Body:\n" + pretty(node.body, indent+2)
-    if isinstance(node, For):
-        s = pad + "For:\n"
-        s += pad + "  Init:\n" + (pretty(node.init, indent+2) if node.init else pad + "    <none>\n")
-        s += pad + "  Cond:\n" + (pretty(node.cond, indent+2) if node.cond else pad + "    <none>\n")
-        s += pad + "  Post:\n" + (pretty(node.post, indent+2) if node.post else pad + "    <none>\n")
-        s += pad + "  Body:\n" + pretty(node.body, indent+2)
-        return s
-    if isinstance(node, Return):
-        return pad + "Return:\n" + (pretty(node.expr, indent+1) if node.expr else pad + "  <none>\n")
-    if isinstance(node, ExprStmt):
-        return pad + "ExprStmt:\n" + (pretty(node.expr, indent+1) if node.expr else pad + "  <none>\n")
-    if isinstance(node, Binary):
-        return pad + f"Binary({node.op}):\n" + pretty(node.left, indent+1) + pretty(node.right, indent+1)
-    if isinstance(node, Unary):
-        return pad + f"Unary({'prefix' if node.prefix else 'postfix'} {node.op}):\n" + pretty(node.operand, indent+1)
-    if isinstance(node, Literal):
-        return pad + f"Literal({node.value})\n"
-    if isinstance(node, Var):
-        return pad + f"Var({node.name})\n"
-    if isinstance(node, Assignment):
-        return pad + "Assignment:\n" + pretty(node.target, indent+1) + pretty(node.value, indent+1)
-    if isinstance(node, Call):
-        s = pad + "Call:\n" + pretty(node.callee, indent+1)
-        for a in node.args:
-            s += pretty(a, indent+1)
-        return s
-    if isinstance(node, ArrayAccess):
-        return pad + "ArrayAccess:\n" + pretty(node.array, indent+1) + pretty(node.index, indent+1)
-    return pad + f"UnknownNode:{node}\n"
-
-# example use
-def main(tokens):
-    p = Parser(tokens)
-    ast = p.parse_program()
-    print(pretty(ast))
-
-
-
-
+            return Literal(tok[1])
+        if self.accept("LPAREN"):
+            expr = self.parse_expression()
+            self.expect("RPAREN")
+            return expr
+        raise SyntaxError(f"Unexpected token {tok}")
